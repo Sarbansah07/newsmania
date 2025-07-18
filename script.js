@@ -241,6 +241,7 @@ class NewsUI {
                         ${this.isBookmarked(article.url) ? 'Unbookmark' : 'Bookmark'}
                     </button>
                     <button class="share-btn">Share</button>
+                    <button class="summarize-btn">Summarize</button>
                     <button class="quiz-btn">Take Quiz</button>
                 </div>
             </div>
@@ -257,6 +258,10 @@ class NewsUI {
 
         modalContent.querySelector('.quiz-btn').addEventListener('click', () => {
             this.startQuiz(article);
+        });
+        
+        modalContent.querySelector('.summarize-btn').addEventListener('click', () => {
+            this.summarizeArticle(article);
         });
 
         this.modal.style.display = 'block';
@@ -373,6 +378,60 @@ class NewsUI {
         }
     }
 
+    async summarizeArticle(article) {
+        const modalContent = document.getElementById('modal-article-content');
+        const articleContent = modalContent.querySelector('.article-content');
+        const summarizeBtn = modalContent.querySelector('.summarize-btn');
+        
+        summarizeBtn.disabled = true;
+        summarizeBtn.textContent = 'Summarizing...';
+        
+        try {
+            // Prepare text for summarization - clean up any [+chars] patterns
+            const articleText = (article.content || article.description || '').replace(/\[\+\d+ chars\]/g, '');
+            
+            // Use our local API endpoint that connects to Gemini
+            const response = await fetch('/api/summarize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: articleText
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to generate summary');
+
+            const data = await response.json();
+            const summary = data.summary || 'Unable to generate summary. Please refer to the original article.';
+
+            // Create and insert the summary
+            const summaryContainer = document.createElement('div');
+            summaryContainer.className = 'article-summary';
+            summaryContainer.innerHTML = `
+                <h3>Article Summary</h3>
+                <p>${summary}</p>
+            `;
+
+            // Check if a summary already exists and remove it
+            const existingSummary = modalContent.querySelector('.article-summary');
+            if (existingSummary) {
+                existingSummary.remove();
+            }
+
+            // Insert the new summary
+            articleContent.parentNode.insertBefore(summaryContainer, articleContent);
+            summarizeBtn.textContent = 'Summary Generated';
+            summaryContainer.scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            console.error('Error generating summary:', error);
+            summarizeBtn.textContent = 'Summarize';
+            summarizeBtn.disabled = false;
+            alert('Failed to generate summary. Please try again.');
+        }
+    }
+
     displayNews(articles) {
         this.newsContainer.innerHTML = '';
         
@@ -451,7 +510,7 @@ window.addEventListener('unhandledrejection', function(event) {
 // Service Worker Registration (if you want to make the app work offline)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
+        navigator.serviceWorker.register('/service-worker.js').then(registration => {
             console.log('ServiceWorker registration successful');
         }).catch(err => {
             console.log('ServiceWorker registration failed:', err);

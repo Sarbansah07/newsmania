@@ -1,0 +1,1 @@
+# newsmania2.0

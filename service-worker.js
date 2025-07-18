@@ -1,11 +1,11 @@
 // service-worker.js
 const CACHE_NAME = 'news-app-cache-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/script.js',
-    '/favicon.ico'
+    './',
+    './index.html',
+    './styles.css',
+    './script.js',
+    './favicon.ico'
 ];
 
 self.addEventListener('install', event => {

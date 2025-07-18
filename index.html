@@ -55,8 +55,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
             max-width: 1200px;
             margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .logo {
@@ -75,17 +77,23 @@
 
         .nav-categories {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
         }
 
         .category-btn {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.8rem;
             border: none;
             border-radius: 20px;
             background: rgba(255,255,255,0.1);
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+            font-size: 0.9rem;
         }
 
         .category-btn:hover {
@@ -130,10 +138,11 @@
 
         main {
             margin-top: 120px;
-            padding: 2rem;
+            padding: 1rem;
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
+            width: 95%;
         }
 
         .loading {
@@ -145,9 +154,9 @@
 
         .news-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 0.5rem;
         }
 
         .article-card {
@@ -254,6 +263,7 @@
             border-radius: 15px;
             position: relative;
             animation: modalFadeIn 0.3s;
+            overflow-x: hidden;
         }
 
         .dark-mode .modal-content {
@@ -338,24 +348,46 @@
         }
 
         @media (max-width: 768px) {
+            .navbar-content {
+                justify-content: center;
+            }
+            
+            .logo {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+            
             .nav-categories {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
                 gap: 0.5rem;
+                margin-bottom: 0.5rem;
             }
 
             .category-btn {
                 font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
+                padding: 0.4rem 0.6rem;
+                white-space: nowrap;
+            }
+
+            .search-container {
+                margin: 0.5rem 0;
             }
 
             .news-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
 
             .modal-content {
                 margin: 10% auto;
                 width: 95%;
+                padding: 15px;
+            }
+            
+            main {
+                margin-top: 150px;
+                padding: 0.5rem;
             }
         }
         #quiz-container {
@@ -396,6 +428,39 @@
         #quiz-progress {
             margin-bottom: 10px;
             font-style: italic;
+        }
+        
+        .article-summary {
+            background-color: #f5f9ff;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .dark-mode .article-summary {
+            background-color: #1f2937;
+            border-left: 4px solid #45a049;
+        }
+        
+        .article-summary h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .dark-mode .article-summary h3 {
+            color: #45a049;
+        }
+        
+        .summary-note {
+            font-size: 0.8em;
+            color: #666;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        .dark-mode .summary-note {
+            color: #aaa;
         }
     </style>
 </head>
@@ -444,12 +509,6 @@
         </div>
     </main>
 
-    <div id="article-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <div id="modal-article-content"></div>
-        </div>
-    </div>
     <div id="article-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
