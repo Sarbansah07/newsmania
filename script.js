@@ -77,7 +77,7 @@ class NewsQuiz {
 
 class NewsAPI {
     constructor() {
-        this.baseUrl = 'http://localhost:3001/api';
+        this.baseUrl = '/api';
     }
 
     async fetchNews(category = 'general', searchTerm = '') {
