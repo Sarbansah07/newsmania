@@ -1,4 +1,12 @@
 {
+  "name": "newsmania2.0",
+  "version": "1.0.0",
+  "description": "Global News Hub - A news aggregator application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
   "dependencies": {
     "axios": "^1.7.7",
     "cors": "^2.8.5",
