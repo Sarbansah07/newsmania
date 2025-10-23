@@ -42,8 +42,9 @@ app.get('/test-api-key', async (req, res) => {
 // News API route
 app.get('/api/news', async (req, res) => {
     try {
-        const { country = 'us', category = 'general' } = req.query;
-        const cacheKey = `news_${country}_${category}`;
+        const { country = 'us', category = 'general', q } = req.query;
+        const searchQuery = q || '';
+        const cacheKey = `news_${country}_${category}_${searchQuery}`;
 
         // Check cache first
         const cachedData = cache.get(cacheKey);
@@ -51,14 +52,38 @@ app.get('/api/news', async (req, res) => {
             return res.json(cachedData);
         }
 
-        // If not in cache, fetch from API
-        const response = await axios.get(NEWS_API_BASE_URL, {
-            params: {
-                country,
-                category,
-                apiKey: API_KEY
-            }
-        });
+        let response;
+        
+        // Use search endpoint if there's a search query
+        if (searchQuery) {
+            response = await axios.get('https://newsapi.org/v2/everything', {
+                params: {
+                    q: searchQuery,
+                    language: 'en',
+                    sortBy: 'publishedAt',
+                    pageSize: 20,
+                    apiKey: API_KEY
+                }
+            });
+        } else {
+            // Use top-headlines endpoint for category browsing
+            response = await axios.get(NEWS_API_BASE_URL, {
+                params: {
+                    country,
+                    category,
+                    apiKey: API_KEY
+                }
+            });
+        }
+
+        // Clean the [+xyz chars] pattern from all articles
+        if (response.data.articles) {
+            response.data.articles = response.data.articles.map(article => ({
+                ...article,
+                content: article.content ? article.content.replace(/\[\+\d+ chars\]/g, '') : article.content,
+                description: article.description ? article.description.replace(/\[\+\d+ chars\]/g, '') : article.description
+            }));
+        }
 
         // Cache the result
         cache.set(cacheKey, response.data);

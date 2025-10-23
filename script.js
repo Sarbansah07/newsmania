@@ -7,71 +7,136 @@ class NewsQuiz {
     }
 
     generateQuestions() {
-        const content = this.article.content || this.article.description;
+        const content = (this.article.content || this.article.description || '').trim();
         const title = this.article.title;
-
-        this.questions = [
-            {
-                question: `According to the article, what is ${this.extractMainSubject(title)}?`,
-                correctAnswer: this.getCorrectAnswer(content, 0),
-                options: this.generateOptions(content, 0)
-            },
-            {
-                question: "What was the main impact or consequence mentioned in the article?",
-                correctAnswer: this.getCorrectAnswer(content, 1),
-                options: this.generateOptions(content, 1)
-            },
-            {
-                question: "Which of the following statements is true according to the article?",
-                correctAnswer: this.getCorrectAnswer(content, 2),
-                options: this.generateOptions(content, 2)
-            },
-            {
-                question: "What was the key finding or announcement mentioned in the article?",
-                correctAnswer: this.getCorrectAnswer(content, 3),
-                options: this.generateOptions(content, 3)
-            },
-            {
-                question: "Based on the article, what was the primary reason for this event/situation?",
-                correctAnswer: this.getCorrectAnswer(content, 4),
-                options: this.generateOptions(content, 4)
-            }
-        ];
-    }
-
-    extractMainSubject(title) {
-        const words = title.split(' ');
-        return words.slice(0, 3).join(' ');
-    }
-
-    getCorrectAnswer(content, questionIndex) {
-        const sentences = content.split('.');
-        return sentences[questionIndex] || sentences[0];
-    }
-
-    generateOptions(content, questionIndex) {
-        const correctAnswer = this.getCorrectAnswer(content, questionIndex);
-        const options = [correctAnswer];
+        const source = this.article.source?.name || 'Unknown Source';
+        const category = this.article.category || 'general';
         
-        for(let i = 0; i < 3; i++) {
-            options.push(this.generatePlausibleOption(content, correctAnswer));
+        if (!content || content.length < 50) {
+            this.questions = [{
+                question: "What is the main topic of this article?",
+                correctAnswer: title,
+                options: this.shuffleArray([title, "Different news story", "Weather update", "Sports news"])
+            }];
+            return;
         }
 
-        return this.shuffleArray(options);
+        const allQuestions = [];
+        
+        // Question 1: About the title/headline
+        const titleWords = title.split(' ');
+        if (titleWords.length > 3) {
+            allQuestions.push({
+                question: "What is this news article about?",
+                correctAnswer: title,
+                options: this.shuffleArray([
+                    title,
+                    this.alterTitle(title, 1),
+                    this.alterTitle(title, 2),
+                    this.alterTitle(title, 3)
+                ])
+            });
+        }
+        
+        // Question 2: About the source
+        allQuestions.push({
+            question: "Which news source published this article?",
+            correctAnswer: source,
+            options: this.shuffleArray([
+                source,
+                this.getRandomSource(source),
+                this.getRandomSource(source),
+                this.getRandomSource(source)
+            ])
+        });
+        
+        // Question 3-5: Content-based questions
+        const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        
+        if (sentences.length >= 3) {
+            // Extract key information from sentences
+            for (let i = 0; i < Math.min(3, sentences.length); i++) {
+                const sentence = sentences[i].trim();
+                if (sentence.length > 30) {
+                    allQuestions.push({
+                        question: `According to the article, which statement is true?`,
+                        correctAnswer: sentence,
+                        options: this.shuffleArray([
+                            sentence,
+                            this.createFalseStatement(sentence, 1),
+                            this.createFalseStatement(sentence, 2),
+                            this.createFalseStatement(sentence, 3)
+                        ])
+                    });
+                }
+            }
+        }
+        
+        // Select random 5 questions or all if less than 5
+        this.questions = this.shuffleArray(allQuestions).slice(0, 5);
+        
+        // If we don't have enough questions, add generic ones
+        while (this.questions.length < 5) {
+            this.questions.push({
+                question: "What type of news is this?",
+                correctAnswer: this.capitalizeFirst(category),
+                options: this.shuffleArray([
+                    this.capitalizeFirst(category),
+                    "Sports",
+                    "Entertainment",
+                    "Technology"
+                ])
+            });
+        }
     }
 
-    generatePlausibleOption(content, correctAnswer) {
-        const sentences = content.split('.');
-        return sentences[Math.floor(Math.random() * sentences.length)] || 
-               "Alternative option based on context";
+    alterTitle(title, variant) {
+        const words = title.split(' ');
+        const alternatives = [
+            words.slice(0, Math.floor(words.length / 2)).join(' ') + ' Update',
+            'Breaking: ' + words.slice(1).join(' '),
+            words.slice(0, -1).join(' ') + ' Report'
+        ];
+        return alternatives[variant - 1] || title + ' - Analysis';
+    }
+
+    getRandomSource(exclude) {
+        const sources = ['BBC News', 'CNN', 'Reuters', 'The Guardian', 'Associated Press', 
+                        'New York Times', 'Washington Post', 'Fox News', 'NBC News', 'ABC News'];
+        const filtered = sources.filter(s => s !== exclude);
+        return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    createFalseStatement(sentence, variant) {
+        const negations = ['not', 'never', 'no longer', 'refuses to', 'denies'];
+        const words = sentence.split(' ');
+        
+        if (variant === 1 && words.length > 5) {
+            // Insert a negation
+            const insertPos = Math.floor(words.length / 3);
+            words.splice(insertPos, 0, negations[Math.floor(Math.random() * negations.length)]);
+            return words.join(' ');
+        } else if (variant === 2 && words.length > 3) {
+            // Change key words
+            const randomWord = ['confirmed', 'announced', 'revealed', 'stated'][Math.floor(Math.random() * 4)];
+            return words.slice(0, 3).join(' ') + ' ' + randomWord + ' ' + words.slice(4).join(' ');
+        } else {
+            // Reverse or modify the statement
+            return 'Officials deny that ' + sentence.toLowerCase();
+        }
+    }
+
+    capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
-        return array;
+        return newArray;
     }
 }
 
